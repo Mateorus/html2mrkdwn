@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+import requests
+import os
+import tarfile
+from io import BytesIO
+from html2text import HTML2Text
+from argparse import ArgumentParser
+from sys import exit
+
+
+def main():
+
+    # Parse command-line arguments
+    parser = ArgumentParser(description="Create Markdown file in 'tar.gz' archive from pure url")
+    parser.add_argument("url", help="url to convert")
+    parser.add_argument("-w", help="enable line wrapping", action='store_const', const = True)
+    parser.add_argument("-z", help="create Markdown.txt instead of archive", action='store_const', const = True)
+    args = vars(parser.parse_args())
+
+    # Download html
+    html = get_html(args["url"])
+
+    # Convert html to markdown
+    markdown = convert(html,args["w"])
+
+    # Create only .md file
+    if args["z"]:
+
+        with open ("Markdown.md", "w") as f:
+            f.write(markdown)
+
+    # Create only archive.tar.gz
+    else:
+
+        tarinfo = tarfile.TarInfo('Markdown.md')
+        tarinfo.size = len(markdown)
+        tar = tarfile.open("Markdown.tar.gz", "w:gz",)
+        tar.addfile(tarinfo, BytesIO(markdown.encode("utf8")))
+        tar.close()
+
+
+def get_html(url):
+    """Download html from url"""
+
+    r = requests.get(url,stream=True, headers={'User-agent': 'Mozilla/5.0'})
+
+    if r.status_code == 200:
+
+        r.raw.decode_content = True
+        html = r.text
+
+        return html
+
+    else:
+        exit("Invalid url")
+
+
+def convert(html, wrapping):
+    """Convert html to Markdown"""
+
+    h = HTML2Text()
+
+    # Enable wrapping
+    if wrapping == None:
+        h.body_width = 0
+
+    markdown = h.handle(html)
+
+    return markdown
+
+
+
+
+if __name__ == "__main__":
+    main()
