@@ -35,7 +35,7 @@ def main():
 
         tarinfo = tarfile.TarInfo('Markdown.md')
         tarinfo.size = len(markdown)
-        tar = tarfile.open("Markdown.tar.gz", "w:gz",)
+        tar = tarfile.open("Markdown.tgz", "w:gz",)
         tar.addfile(tarinfo, BytesIO(markdown.encode("utf8")))
         tar.close()
 
